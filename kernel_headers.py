@@ -553,7 +553,11 @@ def gen_blueprints(
   error_count += find_out(
       verbose, module_dir, arch_prefix, rel_glob, None, arch_out)
 
-  techpack_out = [x.split('include/uapi/')[1] for x in techpack_include_uapi]
+  techpack_out = [
+      x.split('include/uapi/audio/')[1] if 'include/uapi/audio/' in x
+      else x.split('include/uapi/')[1]
+      for x in techpack_include_uapi
+  ]
 
   if error_count != 0:
     return error_count
@@ -817,7 +821,10 @@ def gen_headers(
       error_count += 1
 
   for h in techpack_include_uapi:
-    techpack_uapi_include_prefix = os.path.join(h.split('/include/uapi')[0], 'include', 'uapi') + os.sep
+    if '/include/uapi/audio/' in h:
+      techpack_uapi_include_prefix = os.path.join(h.split('/include/uapi/audio')[0], 'include', 'uapi', 'audio') + os.sep
+    else:
+      techpack_uapi_include_prefix = os.path.join(h.split('/include/uapi')[0], 'include', 'uapi') + os.sep
     if not run_headers_install(
         verbose, gen_dir, headers_install, unifdef,
         techpack_uapi_include_prefix, h):
