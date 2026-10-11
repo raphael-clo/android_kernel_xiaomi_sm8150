@@ -20,6 +20,7 @@ fi
 INFILE=$1
 OUTFILE=$2
 TMPFILE=$OUTFILE.tmp
+mkdir -p "$(dirname "$OUTFILE")"
 
 trap 'rm -f $OUTFILE $TMPFILE' EXIT
 
