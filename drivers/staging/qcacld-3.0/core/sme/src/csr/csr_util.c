@@ -2685,6 +2685,24 @@ uint8_t csr_construct_rsn_ie(struct mac_context *mac, uint32_t sessionId,
 	pmksa_peer = wlan_crypto_get_peer_pmksa(vdev, &pmksa);
 	qdf_mem_zero(&pmksa, sizeof(pmksa));
 	/*
+	 * A PSK/PSK-SHA256 association never needs a PMKID: the PMK comes
+	 * from the passphrase and the AP always runs the 4-way handshake.
+	 * A cached PMKSA for the BSSID (from an earlier SAE/OKC connection or
+	 * the firmware's roam cache) only makes a WPA2/WPA3 transition AP
+	 * reject the association with status 53 (INVALID_PMKID).
+	 */
+	if (pmksa_peer) {
+		int32_t akm = wlan_crypto_get_param(vdev,
+						    WLAN_CRYPTO_PARAM_KEY_MGMT);
+
+		if (akm > 0 &&
+		    !(akm & ~((1 << WLAN_CRYPTO_KEY_MGMT_PSK) |
+			      (1 << WLAN_CRYPTO_KEY_MGMT_PSK_SHA256)))) {
+			sme_debug("PSK AKM 0x%x: no PMKID in the RSN IE", akm);
+			pmksa_peer = NULL;
+		}
+	}
+	/*
 	 * TODO: Add support for Adaptive 11r connection after
 	 * call to csr_get_rsn_information is added here
 	 */
