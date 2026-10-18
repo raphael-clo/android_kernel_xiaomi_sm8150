@@ -9013,6 +9013,16 @@ static void csr_roam_join_rsp_processor(struct mac_context *mac,
 		sme_roam_del_pmkid_from_cache(mac_handle, session_ptr->vdev_id,
 					      pmksa, false);
 		qdf_mem_free(pmksa);
+		/*
+		 * The rejected PMKID need not be the one cached for this BSSID:
+		 * with firmware OKC/PMKSA caching a PMKID derived for another
+		 * BSSID of the same ESS can be offered, and the AP keeps
+		 * answering INVALID_PMKID (endless status 53 loop seen on
+		 * raphael). Flush the whole PMKSA cache of this vdev so the
+		 * next attempt does a full 4-way handshake.
+		 */
+		sme_roam_del_pmkid_from_cache(mac_handle, session_ptr->vdev_id,
+					      NULL, false);
 		retry_same_bss = true;
 	}
 
